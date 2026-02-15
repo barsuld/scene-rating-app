@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#020617" />
+  <link rel="manifest" href="manifest.json" />
+  <title>SceneScore</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { background:#0f172a; color:#e2e8f0; font-family:sans-serif; text-align:center; padding:16px; }
+    button, select { padding:12px; margin:6px; font-size:1rem; border-radius:10px; border:none; }
+    .score { font-size:3rem; margin:10px; }
+  </style>
+</head>
+<body>
+  <h1>SceneScore</h1>
+
+  <div id="setup">
+    <select id="nudge">
+      <option value="0.1">Movie (0.1)</option>
+      <option value="0.2">Long Episode (0.2)</option>
+      <option value="0.5">Short Episode (0.5)</option>
+    </select>
+    <select id="base">
+      <option>5</option><option>6</option><option>7</option>
+      <option>8</option><option>9</option><option>10</option>
+    </select>
+    <br/>
+    <button onclick="start()">Start</button>
+  </div>
+
+  <div id="app" style="display:none;">
+    <div class="score" id="score">0</div>
+    <div>
+      <button onclick="rate(10)">10</button>
+      <button onclick="rate(9)">9</button>
+      <button onclick="rate(8)">8</button>
+      <button onclick="rate(7)">7</button>
+      <button onclick="rate(6)">6</button>
+      <button onclick="rate(0)">0</button>
+    </div>
+    <button onclick="finish()">Finish</button>
+  </div>
+
+  <canvas id="chart" style="display:none;"></canvas>
+
+<script>
+let score = 0;
+let nudge = 0.1;
+let history = [];
+
+function start(){
+  nudge = parseFloat(document.getElementById("nudge").value);
+  score = parseFloat(document.getElementById("base").value);
+  history = [score];
+  document.getElementById("score").innerText = score.toFixed(1);
+  document.getElementById("setup").style.display="none";
+  document.getElementById("app").style.display="block";
+}
+
+function rate(r){
+  if(r > score) score += nudge;
+  else if(r < score) score -= nudge;
+
+  score = Math.max(0, Math.min(10, Math.round(score*10)/10));
+  history.push(score);
+  document.getElementById("score").innerText = score.toFixed(1);
+}
+
+function finish(){
+  document.getElementById("app").style.display="none";
+  const ctx = document.getElementById("chart");
+  ctx.style.display="block";
+  new Chart(ctx, {
+    type:'line',
+    data:{ labels:history.map((_,i)=>i), datasets:[{data:history}] },
+    options:{ scales:{ y:{min:0,max:10} } }
+  });
+}
+
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('service-worker.js');
+}
+</script>
+</body>
+</html>
